@@ -58,6 +58,7 @@ export const DEFAULT_KEY_SEQUENCE_SETTINGS: KeySequenceSettings = {
 	editorScopeEnabled: true,
 	editorScopeTrigger: "Alt-s s",
 	editorScopeShowBorder: true,
+	focusKey: "i",
 	firstLoaded: true,
 };
 
@@ -202,6 +203,26 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 						this.captureShortcutModeTrigger(hotkeyContainer);
 					}),
 			);
+
+		new Setting(containerEl)
+			.setName("Focus key")
+			.setDesc(
+				'While in shortcut mode, pressing this key restores focus to the editor (inspired by Vim\'s "i" for insert mode). ' +
+				'Leave blank to disable — useful if you want to use "i" in shortcut sequences and already have another way to exit shortcut mode (e.g. Esc).',
+			)
+			.addText((text) => {
+				text
+					.setPlaceholder("i")
+					.setValue(this.plugin.settings.focusKey ?? "")
+					.onChange((value) => {
+						const key = value.slice(-1);
+						text.setValue(key);
+						this.plugin.settings.focusKey = key;
+						this.plugin.saveSettings();
+					});
+				text.inputEl.maxLength = 1;
+				text.inputEl.style.width = "3em";
+			});
 
 		new Setting(containerEl)
 			.setName("Show key press visualizer")
