@@ -1,3 +1,15 @@
+## 0.4.0-beta.2
+
+### Bug Fixes
+
+- **settings**: Fix hotkey capture ignoring keypresses in the settings panel
+  - Pressing keys while "Press hotkey..." was active would focus a nearby button
+    instead of recording the key, because Obsidian's settings modal intercepted
+    keyboard events before the document-level capture handler could run
+  - Fix: inject a hidden `<input>` element and focus it for the duration of
+    capture; the browser routes all keyboard input to the focused input, bypassing
+    modal-level navigation handlers
+
 ## 0.4.0-beta.1
 
 ### Features
