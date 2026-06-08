@@ -331,15 +331,6 @@ Press \`x\` to continue to the Shortcuts plugin settings page where you can conf
 						(tab.navEl as HTMLElement).dataset.pluginId =
 							"shortcuts";
 
-						tab.navEl.createEl(
-							"span",
-							{
-								cls: "shortcuts-logo",
-							},
-							(el) => {
-								setIcon(el, "scissors");
-							},
-						);
 					}
 					const result = next.call(this);
 					return result;
