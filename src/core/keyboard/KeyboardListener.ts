@@ -132,8 +132,9 @@ export class KeyboardListener {
 			return triggerResult;
 		}
 
-		// Handle focus mode key ("i")
-		if (hotkeyMode && event.key === "i") {
+		// Handle focus mode key (configurable; skipped if unset)
+		const focusKey = this.plugin.settings.focusKey;
+		if (hotkeyMode && focusKey && event.key === focusKey) {
 			return {
 				shouldProcess: true,
 				action: "focus",

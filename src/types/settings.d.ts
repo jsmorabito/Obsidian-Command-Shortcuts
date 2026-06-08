@@ -15,5 +15,8 @@ interface KeySequenceSettings {
 	editorScopeTrigger: string;
 	editorScopeShowBorder: boolean;
 
+	/** Key used to restore editor focus while in shortcut mode (default: "i", leave empty to disable) */
+	focusKey: string;
+
 	firstLoaded: boolean;
 }
