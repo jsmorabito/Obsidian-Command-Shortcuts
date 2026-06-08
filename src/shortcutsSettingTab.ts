@@ -780,11 +780,12 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 		this.plugin.capturing = true;
 
 		// A focused <input> reliably owns keyboard events — Obsidian's settings
-		// modal won't intercept them for UI navigation the way it does for
-		// non-input elements. We hide it visually but keep it reachable.
-		const hiddenInput = element.createEl("input", {
+		// modal won't intercept them for UI navigation. Attached to containerEl
+		// (inside the modal) so the modal's focus trap doesn't eject it, but
+		// outside activeSpan so that setText() on the span doesn't destroy it.
+		const hiddenInput = this.containerEl.createEl("input", {
 			type: "text",
-			attr: { style: "position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;" },
+			attr: { style: "position:fixed;opacity:0;width:1px;height:1px;pointer-events:none;top:0;left:0;" },
 		});
 
 		const pressedModifiers = new Set<number>();
