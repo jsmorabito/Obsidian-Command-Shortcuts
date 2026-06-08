@@ -1,3 +1,11 @@
+## 0.4.1
+
+### Bug Fixes
+
+- **settings**: Fix multi-key sequence capture stopping after first key
+  - The hidden input used for hotkey capture was a child of the active span; `setText()` on the span destroyed it after the first key, causing focus loss and preventing further keys from being recorded
+  - Fix: append the hidden input to `containerEl` — inside the modal (satisfying the focus trap) but outside the active span
+
 ## 0.4.0
 
 ### Bug Fixes
