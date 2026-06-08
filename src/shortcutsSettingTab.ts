@@ -758,12 +758,20 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 
 		this.plugin.capturing = true;
 
+		// A focused <input> reliably owns keyboard events — Obsidian's settings
+		// modal won't intercept them for UI navigation the way it does for
+		// non-input elements. We hide it visually but keep it reachable.
+		const hiddenInput = element.createEl("input", {
+			type: "text",
+			attr: { style: "position:absolute;opacity:0;width:1px;height:1px;pointer-events:none;" },
+		});
+
 		const pressedModifiers = new Set<number>();
 
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (!this.isCapturing) return;
 			e.preventDefault();
-			e.stopPropagation();
+			e.stopImmediatePropagation();
 
 			const keyCode = e.keyCode;
 			const now = Date.now();
@@ -815,16 +823,15 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 		};
 
 		this.innerComponent = new Component();
-		this.innerComponent.registerDomEvent(
-			document,
-			"keydown",
-			handleKeyDown,
-		);
-		this.innerComponent.registerDomEvent(document, "keyup", handleKeyUp);
+		this.innerComponent.registerDomEvent(hiddenInput, "keydown", handleKeyDown);
+		this.innerComponent.registerDomEvent(hiddenInput, "keyup", handleKeyUp);
 
 		this.innerComponent.register(() => {
 			this.isCapturing = false;
+			hiddenInput.remove();
 		});
+
+		hiddenInput.focus();
 	}
 
 	finishCapture(
