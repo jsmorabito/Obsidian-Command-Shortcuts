@@ -17,8 +17,8 @@ If your plugin does not need CSS, delete this file.
 .theme-dark
 	.shortcuts-setting-tab
 	.setting-hotkey-icon.setting-delete-hotkey:hover
-	.clickable-icon.extra-setting-button {
-	color: white !important;
+	.clickable-icon.clickable-icon.extra-setting-button {
+	color: white;
 }
 
 .shortcuts-setting-tab .setting-hotkey {
@@ -154,13 +154,13 @@ If your plugin does not need CSS, delete this file.
 	transform: rotate(0deg);
 }
 
-.shortcuts-setting-tab .setting-item-name:has(.fold-indicator) {
+.shortcuts-setting-tab .setting-item-name.has-fold-indicator {
 	display: flex;
 	gap: var(--size-2-2);
 }
 
 .shortcuts-setting-tab
-	.setting-item-heading:has(.fold-indicator.mod-active)
+	.setting-item-heading.is-expanded
 	~ .setting-item-heading {
 	margin-top: 0;
 }

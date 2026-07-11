@@ -481,6 +481,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 						setIcon(el, "chevron-right");
 					});
 
+					headSetting.nameEl.addClass("has-fold-indicator");
 					headSetting.nameEl.prepend(iconEl);
 
 					const childList: Setting[] = [];
@@ -502,6 +503,10 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 						() => {
 							const isActive = iconEl.hasClass("mod-active");
 							iconEl.toggleClass("mod-active", !isActive);
+							headSetting.settingEl.toggleClass(
+								"is-expanded",
+								!isActive,
+							);
 							childList.forEach((child) => {
 								isActive
 									? child.settingEl.show()
