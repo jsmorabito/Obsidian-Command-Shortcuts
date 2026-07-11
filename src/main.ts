@@ -2,14 +2,15 @@
 	Component,
 	Editor,
 	EditorPosition,
+	KeymapEventListener,
 	MarkdownRenderer,
+	Menu,
 	Notice,
 	Plugin,
 	Modal,
+	Scope,
 	View,
 	MenuItem,
-	Keymap,
-	setIcon,
 } from "obsidian";
 import { KeySequenceConfig } from "./types/key";
 import { KeySequenceSettings } from "./types/settings";
@@ -24,6 +25,24 @@ import { getAllSupportedShortcuts } from "./utils";
 import { around } from "monkey-around";
 import ElementMonitor from "./surfing-key/element-monitor";
 import { EditorScopeManager } from "./core/editor-scope/EditorScopeManager";
+
+/**
+ * Scope.keys is a private Obsidian internal (not part of the public API)
+ * used here to enumerate/replace the built-in Escape keybinding.
+ */
+export type ScopeWithKeys = Scope & {
+	keys: Array<{ key: string | null; func: KeymapEventListener }>;
+};
+
+/**
+ * The settings-tab controller's prototype (this.app.setting) is a private,
+ * undocumented Obsidian internal used here to tag the plugin's own settings
+ * tab element for styling.
+ */
+interface SettingTabController {
+	onOpen(): void;
+	pluginTabs: Array<{ id: string; navEl: HTMLElement }>;
+}
 
 export default class ShortcutsPlugin extends Plugin {
 	currentSequence: string[] = [];
@@ -47,9 +66,7 @@ export default class ShortcutsPlugin extends Plugin {
 	// Editor Scope Mode
 	editorScopeManager: EditorScopeManager | null = null;
 
-	private originalEscapeFunction:
-		| ((evt: KeyboardEvent, ctx: any) => void)
-		| null = null;
+	private originalEscapeFunction: KeymapEventListener | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -60,7 +77,7 @@ export default class ShortcutsPlugin extends Plugin {
 		this.registerCustomCommands();
 
 		this.app.workspace.onLayoutReady(() => {
-			this.initHotkeyMonitor();
+			void this.initHotkeyMonitor();
 			// Initialize and register the editor scope manager
 			this.editorScopeManager = new EditorScopeManager(this);
 			this.registerEditorExtension(
@@ -90,15 +107,15 @@ export default class ShortcutsPlugin extends Plugin {
 	}
 
 	patchOriginalEscapeScope() {
-		const scope = this.app.scope as any; // Type assertion to avoid TypeScript errors
+		const scope = this.app.scope as ScopeWithKeys;
 		const originalEscapeIndex = scope.keys.findIndex(
-			(key: any) => key.key === "Escape",
+			(key) => key.key === "Escape",
 		);
 
 		if (originalEscapeIndex !== -1) {
 			this.originalEscapeFunction = scope.keys[originalEscapeIndex].func;
 
-			const patchFunction = (evt: KeyboardEvent, ctx: any) => {
+			const patchFunction: KeymapEventListener = (evt) => {
 				if (
 					evt.target instanceof HTMLInputElement ||
 					evt.target instanceof HTMLTextAreaElement
@@ -118,10 +135,10 @@ export default class ShortcutsPlugin extends Plugin {
 
 	restoreOriginalEscapeScope() {
 		if (this.originalEscapeFunction) {
-			const scope = this.app.scope as any;
+			const scope = this.app.scope as ScopeWithKeys;
 			// Remove the patched Escape key binding
 			const patchedEscapeIndex = scope.keys.findIndex(
-				(key: any) => key.key === "Escape",
+				(key) => key.key === "Escape",
 			);
 			if (patchedEscapeIndex !== -1) {
 				scope.keys.splice(patchedEscapeIndex, 1);
@@ -135,10 +152,10 @@ export default class ShortcutsPlugin extends Plugin {
 	patchModalScope(plugin: ShortcutsPlugin) {
 		this.register(
 			around(Modal.prototype, {
-				onOpen: (next) => {
-					return function (...args: any[]) {
+				onOpen: (next: () => void): (() => void) => {
+					return function (this: Modal) {
 						plugin.modalOpened = true;
-						return next.apply(this, args);
+						next.call(this);
 					};
 				},
 			}),
@@ -150,9 +167,7 @@ export default class ShortcutsPlugin extends Plugin {
 			id: "open-settings",
 			name: "Open settings",
 			callback: () => {
-				// @ts-ignore
 				this.app.setting.open();
-				// @ts-ignore
 				this.app.setting.openTabById("shortcuts");
 			},
 		});
@@ -162,14 +177,14 @@ export default class ShortcutsPlugin extends Plugin {
 			name: "Reload first loaded tips",
 			callback: () => {
 				this.settings.firstLoaded = true;
-				this.saveSettings();
+				void this.saveSettings();
 				this.checkFirstLoaded();
 			},
 		});
 
 		this.addCommand({
 			id: "surfing-key",
-			name: "Surfing Key",
+			name: "Surfing key",
 			callback: () => {
 				if (!this.documentMonitor) {
 					this.documentMonitor = new ElementMonitor(
@@ -197,11 +212,9 @@ export default class ShortcutsPlugin extends Plugin {
 		this.hotkeyMonitor = new ShortcutManager(this, this.app, allConfigs);
 		this.addChild(this.hotkeyMonitor);
 
-		this.registerDomEvent(
-			document,
-			"keydown",
-			this.handleKeyDown.bind(this),
-		);
+		this.registerDomEvent(document, "keydown", (event: KeyboardEvent) => {
+			this.handleKeyDown(event);
+		});
 
 		this.registerDomEvent(document, "keyup", (event: KeyboardEvent) => {
 			this.hotkeyMonitor.handleKeyUp(event);
@@ -219,7 +232,7 @@ export default class ShortcutsPlugin extends Plugin {
 				(event.target instanceof HTMLElement &&
 					event.target.isContentEditable)
 			) {
-				if (event.target instanceof HTMLElement) {
+				if (event.target.instanceOf(HTMLElement)) {
 					this.app.workspace.trigger(
 						"shortcuts:contenteditable-focus-change",
 						{
@@ -271,7 +284,8 @@ export default class ShortcutsPlugin extends Plugin {
 		const container = fragment.createDiv({
 			cls: "markdown-rendered",
 		});
-		MarkdownRenderer.render(
+		const renderComponent = new Component();
+		void MarkdownRenderer.render(
 			this.app,
 			`
 Congratulations! 馃帀 **Shortcuts plugin** has been successfully loaded for the first time.
@@ -281,11 +295,11 @@ Pressing the \`Escape\` key while focused will return you to Shortcuts mode, and
 Press \`x\` to continue to the Shortcuts plugin settings page where you can configure your own shortcuts.`,
 			container,
 			"",
-			this,
+			renderComponent,
 		);
 
 		new Notice(fragment, 20000);
-		this.saveSettings();
+		void this.saveSettings();
 	}
 
 	initTooltipObserver(plugin: ShortcutsPlugin) {
@@ -295,19 +309,18 @@ Press \`x\` to continue to the Shortcuts plugin settings page where you can conf
 
 		this.register(
 			around(View.prototype, {
-				onTabMenu: (next) => {
-					return function (...args: any[]) {
-						const menu = args[0];
+				onTabMenu: (
+					next: (menu: Menu) => void
+				): ((menu: Menu) => void) => {
+					return function (this: View, menu: Menu) {
 						menu.addItem((item: MenuItem) => {
 							item.setTitle("Set shortcut").setIcon("scissors");
 							item.onClick(() => {
-								// @ts-ignore
 								plugin.app.setting.open();
-								// @ts-ignore
 								plugin.app.setting.openTabById("shortcuts");
 							});
 						});
-						return next.apply(this, args);
+						next.call(this, menu);
 					};
 				},
 			}),
@@ -315,25 +328,21 @@ Press \`x\` to continue to the Shortcuts plugin settings page where you can conf
 	}
 
 	patchSettingTab() {
-		const setting = (this.app as any).setting;
-		const prototype = Object.getPrototypeOf(setting);
+		// The settings-tab controller's prototype is a private, undocumented Obsidian internal.
+		const prototype = Object.getPrototypeOf(
+			this.app.setting
+		) as SettingTabController;
 
 		const uninstaller = around(prototype, {
-			onOpen: (next) => {
-				return function (this: {
-					pluginTabs: Array<{ id: string; navEl: HTMLElement }>;
-				}) {
-					console.log(this);
+			onOpen: (next: () => void): (() => void) => {
+				return function (this: SettingTabController) {
 					const tab = this.pluginTabs.find((pluginTab) => {
 						return pluginTab.id === "shortcuts";
 					});
 					if (tab) {
-						(tab.navEl as HTMLElement).dataset.pluginId =
-							"shortcuts";
-
+						tab.navEl.dataset.pluginId = "shortcuts";
 					}
-					const result = next.call(this);
-					return result;
+					next.call(this);
 				};
 			},
 		});
@@ -358,10 +367,7 @@ Press \`x\` to continue to the Shortcuts plugin settings page where you can conf
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_KEY_SEQUENCE_SETTINGS,
-			await this.loadData(),
-		);
+		const data = (await this.loadData()) as Partial<KeySequenceSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_KEY_SEQUENCE_SETTINGS, data);
 	}
 }

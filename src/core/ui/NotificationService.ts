@@ -105,7 +105,7 @@ export class NotificationService {
 		new Notice("Shortcut executed: " + configName);
 
 		// Show continuation hint
-		const fragment = document.createDocumentFragment();
+		const fragment = createFragment();
 		fragment.createDiv({
 			text: "Previous shortcut executed: " + configName,
 		});
@@ -172,7 +172,7 @@ export class NotificationService {
 		matchCount: number,
 		possibleMatches: KeySequenceConfig[]
 	): DocumentFragment {
-		const fragment = document.createDocumentFragment();
+		const fragment = createFragment();
 
 		fragment.createDiv({
 			text:

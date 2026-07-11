@@ -117,7 +117,7 @@ export class StatusBarManager {
 	 */
 	private handleButtonClick(): void {
 		this.plugin.app.workspace.trigger(
-			"shortcuts:status-bar-click" as any
+			"shortcuts:status-bar-click"
 		);
 	}
 

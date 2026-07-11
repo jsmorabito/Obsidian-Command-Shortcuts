@@ -1,14 +1,5 @@
-import {
-	App,
-	Component,
-	debounce,
-	Menu,
-	MenuItem,
-	setIcon,
-	View,
-} from "obsidian";
+import { Component, Menu, MenuItem, setIcon } from "obsidian";
 import ShortcutsPlugin from "./main";
-import { around } from "monkey-around";
 
 export class TooltipObserver extends Component {
 	private mutationObserver: MutationObserver;
@@ -18,9 +9,9 @@ export class TooltipObserver extends Component {
 
 	constructor(plugin: ShortcutsPlugin) {
 		super();
-		this.mutationObserver = new MutationObserver(
-			this.handleMutations.bind(this)
-		);
+		this.mutationObserver = new MutationObserver((mutations) => {
+			this.handleMutations(mutations);
+		});
 		this.plugin = plugin;
 	}
 
@@ -48,9 +39,7 @@ export class TooltipObserver extends Component {
 				menu.addItem((item: MenuItem) => {
 					item.setTitle("Set shortcut").setIcon("scissors");
 					item.onClick(() => {
-						// @ts-ignore
 						plugin.app.setting.open();
-						// @ts-ignore
 						plugin.app.setting.openTabById("shortcuts");
 
 						if (
@@ -82,7 +71,7 @@ export class TooltipObserver extends Component {
 			if (mutation.type === "childList") {
 				mutation.addedNodes.forEach((node) => {
 					if (
-						node instanceof HTMLElement &&
+						node.instanceOf(HTMLElement) &&
 						node.hasClass("tooltip")
 					) {
 						this.tooltipsToModify.add(node);
@@ -91,12 +80,12 @@ export class TooltipObserver extends Component {
 				mutation.removedNodes.forEach((node) => {
 					// Prevent removed tooltips from being modified
 					if (
-						node instanceof HTMLElement &&
+						node.instanceOf(HTMLElement) &&
 						node.hasClass("shortcuts-hotkey-label")
 					) {
 						const mutationTarget = mutation.target;
 						if (
-							mutationTarget instanceof HTMLElement &&
+							mutationTarget.instanceOf(HTMLElement) &&
 							mutationTarget.hasClass("tooltip")
 						) {
 							this.tooltipsToModify.add(mutationTarget);
@@ -109,7 +98,7 @@ export class TooltipObserver extends Component {
 			) {
 				const target = mutation.target;
 				if (
-					target instanceof HTMLElement &&
+					target.instanceOf(HTMLElement) &&
 					target.hasClass("tooltip")
 				) {
 					this.tooltipsToModify.add(target);
@@ -137,13 +126,10 @@ export class TooltipObserver extends Component {
 
 		if (hotkey) {
 			if (hotkey.sequence.length > 0) {
-				tooltipElement.createEl(
-					"div",
-					{
+				tooltipElement.createDiv({
 						cls: "shortcuts-hotkey-label",
-					},
-					(el) => {
-						const iconEl = el.createEl("span", {
+					}, (el) => {
+						const iconEl = el.createSpan({
 							cls: "shortcuts-hotkey-label-icon",
 						});
 						setIcon(iconEl, "scissors");
@@ -159,8 +145,7 @@ export class TooltipObserver extends Component {
 								});
 							}
 						});
-					}
-				);
+					});
 			}
 		}
 

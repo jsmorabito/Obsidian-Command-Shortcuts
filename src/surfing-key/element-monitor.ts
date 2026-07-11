@@ -1,4 +1,4 @@
-import { App, Keymap, Modal, Plugin } from "obsidian";
+import { App, Keymap, Modal } from "obsidian";
 import type ShortcutsPlugin from "../main";
 
 class UniqueStrings {
@@ -172,7 +172,7 @@ export default class ElementMonitor {
 
 				this.lastKeypressTime = currentTime;
 
-				setTimeout(() => {
+				window.setTimeout(() => {
 					this.keyComboPressed = false;
 				}, 1000);
 			}
@@ -212,13 +212,13 @@ export default class ElementMonitor {
 	attachStringsToElements(): void {
 		const rules = [
 			(child: HTMLElement) =>
-				child instanceof SVGSVGElement &&
+				child.instanceOf(SVGSVGElement) &&
 				!child.classList?.contains("canvas-background") &&
 				!child.classList?.contains("canvas-edges")
 					? true
 					: null,
 			(child: HTMLElement) =>
-				child instanceof HTMLInputElement && child.type === "checkbox"
+				child.instanceOf(HTMLInputElement) && child.type === "checkbox"
 					? true
 					: null,
 			(child: HTMLElement) =>
@@ -239,8 +239,8 @@ export default class ElementMonitor {
 
 			const pushChildren = (child: HTMLElement) => {
 				// Get computed style of the child
-				if (child instanceof Element) {
-					const style = window.getComputedStyle(child as Element);
+				if (child.instanceOf(Element)) {
+					const style = window.getComputedStyle(child);
 					// Ignore if the display property is "none"
 					if (style.display === "none") {
 						return false;
@@ -267,9 +267,9 @@ export default class ElementMonitor {
 			const hasSvgOrTextContentChild =
 				(Array.from(element.childNodes).some(pushChildren) ||
 					element.classList?.contains("canvas-color-picker-item") ||
-					(element instanceof HTMLInputElement &&
+					(element.instanceOf(HTMLInputElement) &&
 						element.type === "search") ||
-					element instanceof HTMLSelectElement) &&
+					element.instanceOf(HTMLSelectElement)) &&
 				!element?.classList?.contains("canvas-icon-placeholder");
 			if (hasSvgOrTextContentChild) {
 				const style = window.getComputedStyle(element);
@@ -289,7 +289,7 @@ export default class ElementMonitor {
 							element
 						);
 
-						const stringElement = this.overlay.createEl("span", {
+						const stringElement = this.overlay.createSpan({
 							cls: "surfing-key-string",
 							attr: {
 								id: uniqueString,
@@ -383,10 +383,7 @@ export default class ElementMonitor {
 					}
 					// this.overlay.querySelectorAll('.surfing-key-string').forEach((span: HTMLSpanElement) => span.show());
 					// Update here
-					for (const [
-						uniqueString,
-						_,
-					] of this.elementsWithUniqueStrings.entries()) {
+					for (const uniqueString of this.elementsWithUniqueStrings.keys()) {
 						const stringElement =
 							document.getElementById(uniqueString);
 						stringElement?.show();
@@ -416,10 +413,7 @@ export default class ElementMonitor {
 
 			// this.overlay.querySelectorAll('.surfing-key-string').forEach((span: HTMLSpanElement) => {
 			// Update here
-			for (const [
-				uniqueString,
-				_,
-			] of this.elementsWithUniqueStrings.entries()) {
+			for (const uniqueString of this.elementsWithUniqueStrings.keys()) {
 				const stringElement = document.getElementById(uniqueString);
 				if (
 					stringElement &&
@@ -468,8 +462,8 @@ export default class ElementMonitor {
 						) {
 							(document.activeElement as HTMLElement)?.blur();
 						}
-						setTimeout(() => {
-							(elementToClick as HTMLInputElement)?.focus();
+						window.setTimeout(() => {
+							(elementToClick)?.focus();
 						}, 0);
 					}
 				}
@@ -497,7 +491,7 @@ export default class ElementMonitor {
 				);
 				this.globalKeydownHandler = null;
 			}
-			setTimeout(() => {
+			window.setTimeout(() => {
 				this.modal.close();
 			}, 0);
 		}

@@ -1,7 +1,6 @@
 import { SelectionRange } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
 import "obsidian";
-import { EventRef } from "obsidian";
+import { Command, Editor, EventRef, Menu, Scope } from "obsidian";
 
 declare module "obsidian" {
 	interface App {
@@ -10,14 +9,24 @@ declare module "obsidian" {
 			listCommands(): Command[];
 
 			app: App;
-			editorCommands: Map<string, Command>;
-			commands: Map<string, Command>;
+			editorCommands: Record<string, Command>;
+			commands: Record<string, Command>;
+		};
+
+		/**
+		 * Private, undocumented Obsidian internal (the settings modal controller,
+		 * a Modal subclass — hence the public `scope`).
+		 */
+		setting: {
+			open(): void;
+			openTabById(id: string): void;
+			scope: Scope;
 		};
 	}
 
 	interface View {
 		setSortOrder(order: string): void;
-		onTabMenu: any;
+		onTabMenu(menu: Menu): void;
 	}
 
 	interface Workspace {
@@ -35,8 +44,8 @@ declare module "obsidian" {
 				focusing: boolean;
 				editor: Editor;
 				pos: SelectionRange;
-			}) => any,
-			ctx?: any
+			}) => unknown,
+			ctx?: unknown
 		): EventRef;
 
 		/**
@@ -51,8 +60,8 @@ declare module "obsidian" {
 			}: {
 				focusing: boolean;
 				input: HTMLInputElement | HTMLTextAreaElement;
-			}) => any,
-			ctx?: any
+			}) => unknown,
+			ctx?: unknown
 		): EventRef;
 
 		/**
@@ -67,8 +76,18 @@ declare module "obsidian" {
 			}: {
 				focusing: boolean;
 				element: HTMLElement;
-			}) => any,
-			ctx?: any
+			}) => unknown,
+			ctx?: unknown
+		): EventRef;
+
+		/**
+		 * Triggered when the status bar shortcut indicator is clicked.
+		 * @public
+		 */
+		on(
+			name: "shortcuts:status-bar-click",
+			callback: () => unknown,
+			ctx?: unknown
 		): EventRef;
 	}
 }

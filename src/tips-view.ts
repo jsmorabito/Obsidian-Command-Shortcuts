@@ -1,4 +1,4 @@
-import { Component, App, Modal } from "obsidian";
+import { Modal } from "obsidian";
 import {
 	computePosition,
 	autoUpdate,
@@ -48,14 +48,18 @@ export class TipsView extends Modal {
 			computePosition(targetEl, this.modalEl, {
 				placement: "top-start",
 				middleware: middleware,
-			}).then(({ x, y }: { x: number; y: number }) => {
-				Object.assign(this.modalEl.style, {
-					left: `${x}px`,
-					top: `${y - 10}px`, // Moved up by 10 pixels
-					position: "fixed",
-					transform: "none",
+			})
+				.then(({ x, y }: { x: number; y: number }) => {
+					Object.assign(this.modalEl.style, {
+						left: `${x}px`,
+						top: `${y - 10}px`, // Moved up by 10 pixels
+						position: "fixed",
+						transform: "none",
+					});
+				})
+				.catch((error: unknown) => {
+					console.error("Failed to compute tooltip position", error);
 				});
-			});
 		});
 	}
 

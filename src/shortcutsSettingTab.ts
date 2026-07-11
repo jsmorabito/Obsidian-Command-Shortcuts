@@ -2,8 +2,8 @@ import {
 	App,
 	Component,
 	ExtraButtonComponent,
+	KeymapEventListener,
 	Menu,
-	Modal,
 	Notice,
 	Platform,
 	PluginSettingTab,
@@ -12,7 +12,6 @@ import {
 	SearchComponent,
 	setIcon,
 	Setting,
-	setTooltip,
 } from "obsidian";
 import {
 	AvailableScope,
@@ -21,7 +20,7 @@ import {
 } from "./types/key";
 import { KeySequenceSettings } from "./types/settings";
 import { AVAILABLE_CONFIGS } from "./keySequence";
-import ShortcutsPlugin from "./main";
+import ShortcutsPlugin, { ScopeWithKeys } from "./main";
 import keycode from "keycode";
 import confetti from "canvas-confetti";
 
@@ -62,11 +61,6 @@ export const DEFAULT_KEY_SEQUENCE_SETTINGS: KeySequenceSettings = {
 	firstLoaded: true,
 };
 
-interface CapturedKey {
-	key: string;
-	timestamp: number;
-}
-
 const modifierKeys = [16, 17, 18, 91, 93];
 
 export class ShortcutsSettingTab extends PluginSettingTab {
@@ -90,7 +84,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 	private showShortcutsDom: Setting | null = null;
 	private showedCommands: number = 0;
 
-	private tempFunc: any;
+	private tempFunc: KeymapEventListener | null = null;
 
 	constructor(app: App, plugin: ShortcutsPlugin) {
 		super(app, plugin);
@@ -180,7 +174,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.autoShortcutMode)
 					.onChange((value) => {
 						this.plugin.settings.autoShortcutMode = value;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -218,10 +212,10 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 						const key = value.slice(-1);
 						text.setValue(key);
 						this.plugin.settings.focusKey = key;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 				text.inputEl.maxLength = 1;
-				text.inputEl.style.width = "3em";
+				text.inputEl.addClass("shortcuts-focus-key-input");
 			});
 
 		new Setting(containerEl)
@@ -232,7 +226,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.showKeyPressNotice)
 					.onChange((value) => {
 						this.plugin.settings.showKeyPressNotice = value;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -247,7 +241,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					.onChange((value) => {
 						this.plugin.settings.showShortcutActivatedNotice =
 							value;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -262,7 +256,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.sequenceTimeoutDuration)
 					.onChange((value) => {
 						this.plugin.settings.sequenceTimeoutDuration = value;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -276,7 +270,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.showCurrentSequence)
 					.onChange((value) => {
 						this.plugin.settings.showCurrentSequence = value;
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 					});
 			});
 
@@ -360,13 +354,10 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 
 
 	createHr(containerEl: HTMLElement): void {
-		const dividerEl = containerEl.createDiv(
-			{ cls: "settings-divider" },
-			(el) => {
-				const iconEl = el.createSpan({ cls: "settings-divider-icon" });
-				setIcon(iconEl, "scissors");
-			},
-		);
+		containerEl.createDiv({ cls: "settings-divider" }, (el) => {
+			const iconEl = el.createSpan({ cls: "settings-divider-icon" });
+			setIcon(iconEl, "scissors");
+		});
 	}
 
 	createSearchAndFilterComponents(containerEl: HTMLElement): void {
@@ -448,7 +439,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 				cls: "hotkey-filter-inner",
 				text: this.filterStatus,
 			});
-			const removeButton = filterInner.createDiv(
+			filterInner.createDiv(
 				{
 					cls: "hotkey-filter-remove-button",
 				},
@@ -557,17 +548,17 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 			(el) => {
 				iconEl = el.createDiv({ cls: "special-icon" });
 				setIcon(iconEl, "scissors");
-				const nameEl = el.createDiv({
+				el.createDiv({
 					cls: "special-name",
 					text: "Shortcuts",
 				});
 				comboEl = el.createDiv({ cls: "special-combo" });
 				this.createKonamiIcons(comboEl, konamiCode);
-				const creditsEl = el.createDiv({
+				el.createDiv({
 					cls: "special-credits",
 					text: "by Johnny & Boninall",
 				});
-				const versionEl = el.createDiv({
+				el.createDiv({
 					cls: "special-version",
 					text: this.plugin.manifest.version,
 				});
@@ -592,14 +583,14 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					if (konamiIndex === konamiCode.length) {
 						iconEl.toggleClass("mod-active", true);
 						this.triggerConfetti();
-						setTimeout(() => {
+						window.setTimeout(() => {
 							window.open(
 								"https://github.com/Quorafind/Obsidian-Shortcuts/wiki/Donate",
 								"_blank",
 							);
 						}, 400);
 
-						setTimeout(() => {
+						window.setTimeout(() => {
 							this.resetKonamiHighlight(comboEl);
 							iconEl.toggleClass("mod-active", false);
 						}, 1000);
@@ -647,7 +638,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 	}
 
 	triggerConfetti(): void {
-		confetti({
+		void confetti({
 			particleCount: 100,
 			spread: 70,
 			origin: { y: 0.6 },
@@ -730,14 +721,14 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 			});
 			hotkeySpan.setText(this.formatSequence(config.sequence));
 
-			const deleteButton = hotkeySpan.createSpan(
+			hotkeySpan.createSpan(
 				{
 					cls: "setting-hotkey-icon setting-delete-hotkey",
 				},
 				(el) => {
 					new ExtraButtonComponent(el).setIcon("x").onClick(() => {
 						config.sequence = [];
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 						this.renderHotkeyStatus(containerEl, config);
 					});
 				},
@@ -749,7 +740,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 				cls: "setting-hotkey mod-active",
 				text: "Press hotkey...",
 			});
-			const confirmButton = containerEl.createSpan(
+			containerEl.createSpan(
 				{
 					cls: "setting-hotkey-icon setting-confirm-hotkey",
 				},
@@ -864,7 +855,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 		this.commandId = null;
 		if (this.currentSequence.length > 0 && config) {
 			config.sequence = this.currentSequence;
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 		}
 
 		this.innerComponent?.unload();
@@ -926,22 +917,22 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 	}
 
 	formatSequence(sequence: string[][]): DocumentFragment {
-		const fragment = document.createDocumentFragment();
+		const fragment = createFragment();
 		if (sequence.join(" then ") === " ") {
-			fragment.createEl("span", { text: "Space", cls: "individual-key" });
+			fragment.createSpan({ text: "Space", cls: "individual-key" });
 			return fragment;
 		}
 
 		sequence.forEach((combo, index) => {
-			const comboSpan = fragment.createEl("span", { cls: "key-combo" });
+			const comboSpan = fragment.createSpan({ cls: "key-combo" });
 
 			combo.forEach((key, keyIndex) => {
-				const keySpan = comboSpan.createEl("span", {
+				comboSpan.createSpan({
 					text: this.convertToMacModifier(key),
 					cls: "individual-key",
 				});
 				if (keyIndex < combo.length - 1) {
-					comboSpan.createEl("span", {
+					comboSpan.createSpan({
 						text: "+",
 						cls: "key-separator",
 					});
@@ -949,7 +940,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 			});
 
 			if (index < sequence.length - 1) {
-				fragment.createEl("span", {
+				fragment.createSpan({
 					text: "then",
 					cls: "combo-separator",
 				});
@@ -959,7 +950,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 		return fragment;
 	}
 
-	getKeyStringFromCode(keyCode: number): string {
+	getKeyStringFromCode(this: void, keyCode: number): string {
 		if (keyCode === 91 || keyCode === 93) return "meta";
 
 		return keycode(keyCode);
@@ -977,14 +968,14 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 					[this.plugin.settings.shortcutModeTrigger],
 				]),
 			);
-			const deleteButton = hotkeySpan.createSpan(
+			hotkeySpan.createSpan(
 				{
 					cls: "setting-hotkey-icon setting-delete-hotkey",
 				},
 				(el) => {
 					new ExtraButtonComponent(el).setIcon("x").onClick(() => {
 						this.plugin.settings.shortcutModeTrigger = "";
-						this.plugin.saveSettings();
+						void this.plugin.saveSettings();
 
 						this.renderShortcutModeTrigger(containerEl);
 
@@ -1000,7 +991,7 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 			cls: "setting-hotkey mod-active",
 			text: "Press hotkey...",
 		});
-		const confirmButton = containerEl.createSpan(
+		containerEl.createSpan(
 			{
 				cls: "setting-hotkey-icon setting-confirm-hotkey",
 			},
@@ -1050,10 +1041,9 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 
 		this.innerComponent = new Component();
 		containerEl.focus();
-		// @ts-ignore
-		this.tempFunc = this.setting.scope.keys[0].func;
-		// @ts-ignore
-		this.setting.scope.keys[0].func = () => {};
+		const settingScope = this.app.setting.scope as ScopeWithKeys;
+		this.tempFunc = settingScope.keys[0].func;
+		settingScope.keys[0].func = () => {};
 		this.innerComponent.registerDomEvent(
 			document,
 			"keydown",
@@ -1077,56 +1067,15 @@ export class ShortcutsSettingTab extends PluginSettingTab {
 
 		if (combo) {
 			this.plugin.settings.shortcutModeTrigger = combo.toLowerCase();
-			this.plugin.saveSettings();
+			void this.plugin.saveSettings();
 		}
 
 		this.innerComponent?.unload();
 		this.renderShortcutModeTrigger(containerEl);
 
-		// @ts-ignore
-		this.setting.scope.keys[0].func = this.tempFunc;
+		if (this.tempFunc) {
+			(this.app.setting.scope as ScopeWithKeys).keys[0].func =
+				this.tempFunc;
+		}
 	}
 }
-
-//
-//
-// class BlankModal extends Modal {
-// 	handlers: {
-// 		handleKeyDown: (e: KeyboardEvent) => void;
-// 		handleKeyUp: (e: KeyboardEvent) => void;
-// 	};
-//
-// 	constructor(
-// 		app: App,
-// 		readonly component: Component,
-// 		handleKeyDown: (e: KeyboardEvent) => void,
-// 		handleKeyUp: (e: KeyboardEvent) => void,
-// 	) {
-// 		super(app);
-// 		this.handlers = {
-// 			handleKeyDown,
-// 			handleKeyUp
-// 		};
-// 	}
-//
-// 	onOpen(): void {
-// 		this.modalEl.detach();
-//
-// 		this.removeExistingKeys();  // Call this method before registering new events
-//
-// 		this.component.registerDomEvent(this.containerEl, 'keydown', this.handlers.handleKeyDown);
-// 		this.component.registerDomEvent(this.containerEl, 'keyup', this.handlers.handleKeyUp);
-// 	}
-//
-// 	onClose() {
-// 		this.containerEl.onkeydown = null;
-// 		this.containerEl.onkeyup = null;
-//
-// 		super.onClose();
-// 	}
-//
-// 	removeExistingKeys(): void {
-// 		this.scope.keys.length = 0;
-// 	}
-// }
-

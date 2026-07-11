@@ -351,3 +351,7 @@ span.shortcuts-logo {
 .cm-editor.editor-scope-active:hover::before {
 	opacity: 1;
 }
+
+.shortcuts-focus-key-input {
+	width: 3em;
+}

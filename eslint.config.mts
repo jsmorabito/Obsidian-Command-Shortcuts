@@ -1,9 +1,13 @@
 import tseslint from 'typescript-eslint';
 import obsidianmd from 'eslint-plugin-obsidianmd';
 import globals from 'globals';
-import { globalIgnores } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
 
-export default tseslint.config(
+const tsconfigRootDir = dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig(
 	globalIgnores([
 		'node_modules',
 		'build',
@@ -19,7 +23,7 @@ export default tseslint.config(
 				projectService: {
 					allowDefaultProject: ['eslint.config.mts', 'manifest.json', 'esbuild.config.mjs', 'version-bump.mjs'],
 				},
-				tsconfigRootDir: import.meta.dirname,
+				tsconfigRootDir,
 				extraFileExtensions: ['.json'],
 			},
 		},
@@ -35,4 +39,11 @@ export default tseslint.config(
 		},
 	},
 	...obsidianmd.configs.recommended,
+	{
+		files: ['tests/**/*.ts'],
+		rules: {
+			'obsidianmd/prefer-window-timers': 'off',
+			'@microsoft/sdl/no-inner-html': 'off',
+		},
+	},
 );

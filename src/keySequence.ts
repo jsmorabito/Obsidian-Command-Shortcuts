@@ -1,4 +1,4 @@
-import { App, Command } from "obsidian";
+import { App } from "obsidian";
 import {
 	Action,
 	ActionType,
@@ -143,7 +143,7 @@ export const AVAILABLE_CONFIGS: KeySequenceConfig[] = [
 			const view =
 				app.workspace.getLeavesOfType("file-explorer")[0]?.view;
 			if (view) {
-				(view as any).setSortOrder("byCreatedTimeReverse");
+				view.setSortOrder("byCreatedTimeReverse");
 			}
 		},
 		actionType: "FUNC",

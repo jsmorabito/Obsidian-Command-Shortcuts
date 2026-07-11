@@ -1,8 +1,5 @@
 import { EditorView } from "@codemirror/view";
-import { StateEffect, EditorState } from "@codemirror/state";
-import { App, editorEditorField, editorInfoField } from "obsidian";
-
-const smokeEffect = StateEffect.define(undefined);
+import { App, editorInfoField } from "obsidian";
 
 export const editorExt = (app: App) => {
 	let lastFocusState = false;

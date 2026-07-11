@@ -30,7 +30,7 @@ export interface SequenceMatchResult {
  */
 export class SequenceMatcher {
 	private currentSequence: string[][] = [];
-	private sequenceTimer: NodeJS.Timeout | null = null;
+	private sequenceTimer: number | null = null;
 	private readonly COMBO_THRESHOLD: number;
 	private lastKeyTime: number = 0;
 
@@ -143,7 +143,7 @@ export class SequenceMatcher {
 	 */
 	startTimer(timeout: number, onTimeout: () => void): void {
 		this.resetTimer();
-		this.sequenceTimer = setTimeout(() => {
+		this.sequenceTimer = window.setTimeout(() => {
 			onTimeout();
 			this.reset();
 		}, timeout);
@@ -154,7 +154,7 @@ export class SequenceMatcher {
 	 */
 	resetTimer(): void {
 		if (this.sequenceTimer) {
-			clearTimeout(this.sequenceTimer);
+			window.clearTimeout(this.sequenceTimer);
 			this.sequenceTimer = null;
 		}
 	}

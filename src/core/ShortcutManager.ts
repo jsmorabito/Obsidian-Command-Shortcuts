@@ -148,7 +148,7 @@ export class ShortcutManager extends Component {
 		this.plugin.registerEvent(
 			this.app.workspace.on(
 				"shortcuts:editor-focus-change",
-				(data: any) => {
+				(data) => {
 					this.hotkeyMode = this.focusHandler.onEditorFocusChange(
 						data,
 						this.hotkeyMode,
@@ -161,7 +161,7 @@ export class ShortcutManager extends Component {
 
 		// Input focus change
 		this.plugin.registerEvent(
-			this.app.workspace.on("shortcuts:input-focus-change", (data: any) => {
+			this.app.workspace.on("shortcuts:input-focus-change", (data) => {
 				this.hotkeyMode = this.focusHandler.onInputFocusChange(
 					data,
 					this.hotkeyMode,
@@ -176,7 +176,7 @@ export class ShortcutManager extends Component {
 		this.plugin.registerEvent(
 			this.app.workspace.on(
 				"shortcuts:contenteditable-focus-change",
-				(data: any) => {
+				(data) => {
 					this.hotkeyMode =
 						this.focusHandler.onContentEditableFocusChange(
 							data,
@@ -191,7 +191,7 @@ export class ShortcutManager extends Component {
 
 		// Status bar click
 		this.plugin.registerEvent(
-			this.app.workspace.on("shortcuts:status-bar-click" as any, () => {
+			this.app.workspace.on("shortcuts:status-bar-click", () => {
 				this.hotkeyMode = !this.hotkeyMode;
 				this.statusBarManager.setActive(this.hotkeyMode);
 				if (this.hotkeyMode) {
@@ -333,7 +333,7 @@ export class ShortcutManager extends Component {
 			event.target instanceof HTMLElement
 		) {
 			const isCodeMirror =
-				(event.target as HTMLElement).closest(".cm-scroller") !== null;
+				(event.target).closest(".cm-scroller") !== null;
 
 			if (isCodeMirror) {
 				this.blurEditor();
@@ -428,7 +428,7 @@ export class ShortcutManager extends Component {
 		this.shortcuts = this.plugin.settings.sequences.flatMap(
 			(s) => s.configs
 		);
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 
 		// Update notification settings
 		this.notificationService.updateSettings({

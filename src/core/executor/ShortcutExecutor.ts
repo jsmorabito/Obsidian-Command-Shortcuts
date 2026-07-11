@@ -48,7 +48,7 @@ export class ShortcutExecutor {
 				break;
 			default:
 				console.warn(
-					`Unknown action type: ${config.actionType} for shortcut: ${config.name}`
+					`Unknown action type: ${config.actionType as string} for shortcut: ${config.name}`
 				);
 		}
 	}

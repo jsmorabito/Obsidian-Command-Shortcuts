@@ -53,7 +53,7 @@ export class EditorScopeManager {
 
 					return true;
 				},
-			} as any,
+			},
 		]);
 	}
 
@@ -82,7 +82,7 @@ export class EditorScopeManager {
 		this.plugin.hotkeyMonitor.resetEditorScopeSequence();
 
 		view.dom.classList.remove("editor-scope-active");
-		new Notice("Editor Scope: Deactivated", 2000);
+		new Notice("Editor shortcuts scope: Deactivated", 2000);
 	}
 
 	private isStandaloneModifier(event: KeyboardEvent): boolean {
