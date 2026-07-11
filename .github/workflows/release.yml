@@ -10,9 +10,6 @@ permissions:
     id-token: write
     attestations: write
 
-env:
-    PLUGIN_NAME: obsidian-shortcuts
-
 jobs:
     build:
         runs-on: ubuntu-latest
@@ -41,12 +38,6 @@ jobs:
             -   name: Build
                 run: pnpm run build
 
-            -   name: Package zip
-                run: |
-                    mkdir ${{ env.PLUGIN_NAME }}
-                    cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
-                    zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
-
             -   name: Attest build provenance
                 uses: actions/attest-build-provenance@v2
                 with:
@@ -54,13 +45,12 @@ jobs:
                         main.js
                         manifest.json
                         styles.css
-                        ${{ env.PLUGIN_NAME }}.zip
 
             -   name: Create release
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                 run: |
                     gh release create "${{ github.ref_name }}" \
-                        main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}.zip \
+                        main.js manifest.json styles.css \
                         --title "${{ github.ref_name }}" \
                         --generate-notes
