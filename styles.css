@@ -186,13 +186,22 @@ If your plugin does not need CSS, delete this file.
 	color: var(--text-faint);
 }
 
-.shortcuts-status-item.mod-active .clickable-icon {
-	color: var(--icon-color-active);
+/* Match core icon status bar items (.plugin-editor-status, .plugin-sync):
+   no vertical padding so the item doesn't make the status bar taller, and
+   the item itself (not the inner icon button) owns hover/colour. */
+.status-bar-item.shortcuts-status-item {
+	padding: 0 var(--size-2-2);
 }
 
 .shortcuts-status-item .clickable-icon {
 	padding: 0;
-	--icon-size: 14px;
+	color: inherit;
+	opacity: 1;
+	background-color: transparent;
+}
+
+.shortcuts-status-item.mod-active .clickable-icon {
+	color: var(--icon-color-active);
 }
 
 .shortcuts-tooltip {

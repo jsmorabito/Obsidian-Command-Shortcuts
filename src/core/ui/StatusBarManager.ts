@@ -44,7 +44,10 @@ export class StatusBarManager {
 	 * - Auto-shortcut mode indicator (if enabled)
 	 */
 	initialize(): void {
-		this.statusBarItem.toggleClass(["shortcuts-status-item"], true);
+		this.statusBarItem.toggleClass(
+			["shortcuts-status-item", "mod-clickable"],
+			true
+		);
 
 		// Create button
 		this.button = this.createButton();
