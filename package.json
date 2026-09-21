@@ -1,6 +1,6 @@
 {
 	"name": "shortcuts",
-	"version": "0.4.12",
+	"version": "0.4.13",
 	"description": "A shortcuts plugin for power users.",
 	"main": "main.js",
 	"scripts": {
