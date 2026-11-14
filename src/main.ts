@@ -290,9 +290,9 @@ export default class ShortcutsPlugin extends Plugin {
 			`
 Congratulations! 馃帀 **Shortcuts plugin** has been successfully loaded for the first time.
 You are now able to activate commands using single keys \`A\`, combos \`A+B\`, and \`A then B+C then D\` sequences.
-Shortcuts mode is activated at all times except when the editor or an input field is focused and this will be indicated by a newly added icon to your status bar.
+Shortcuts mode is activated at all times except when the editor or an input field is focused. You can turn on the status bar icon in settings if you want a visual indicator.
 Pressing the \`Escape\` key while focused will return you to Shortcuts mode, and pressing it again will take you back to the focused state.
-Press \`x\` to continue to the Shortcuts plugin settings page where you can configure your own shortcuts.`,
+Press \`G\` then \`S\` to continue to the Shortcuts plugin settings page where you can configure your own shortcuts.`,
 			container,
 			"",
 			renderComponent,

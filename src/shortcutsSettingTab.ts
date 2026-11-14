@@ -53,13 +53,13 @@ export const DEFAULT_KEY_SEQUENCE_SETTINGS: KeySequenceSettings = {
 	keyboardLayout: "qwerty",
 	autoShortcutMode: true,
 	sequenceTimeoutDuration: 5000,
-	showCurrentSequence: true,
-	showStatusBarIcon: true,
+	showCurrentSequence: false,
+	showStatusBarIcon: false,
 	editorScopeEnabled: true,
 	editorScopeTrigger: "Alt-s s",
 	editorScopeShowBorder: true,
 	focusKey: "i",
-	disableAutoFocusOnFileOpen: false,
+	disableAutoFocusOnFileOpen: true,
 	firstLoaded: true,
 };
 
